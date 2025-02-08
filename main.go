@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"os"
 	"time"
+
+	"github.com/joho/godotenv"
 )
 
 func main() {
@@ -14,14 +16,20 @@ func main() {
 	slog.Info("Starting server...", "version", "1.0.0")
 	if err := run(); err != nil {
 		slog.Error("failed to run", "error", err)
-		return
+		os.Exit(1)
 	}
 	slog.Info("All systems offline")
 }
 
 func run() error {
-	db := make(map[string]string)
-	handler := api.NewHandler(db)
+	err := godotenv.Load()
+	if err != nil {
+		slog.Error("failed to load .env file", "error", err)
+		os.Exit(1)
+	}
+	apiKey := os.Getenv("OMDB_KEY")
+
+	handler := api.NewHandler(apiKey)
 	s := http.Server{
 		Addr:                         ":8080",
 		Handler:                      handler,

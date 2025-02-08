@@ -2,10 +2,9 @@ package api
 
 import (
 	"encoding/json"
+	"go-first-big-project/api/omdb"
 	"log/slog"
-	"math/rand/v2"
 	"net/http"
-	"net/url"
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
@@ -36,60 +35,38 @@ func sendJSON(w http.ResponseWriter, resp Response, statusCode int) {
 	}
 }
 
-func NewHandler(db map[string]string) http.Handler {
+func NewHandler(apiKey string) http.Handler {
 	r := chi.NewMux()
 	r.Use(middleware.Recoverer)
 	r.Use(middleware.RequestID)
 	r.Use(middleware.Logger)
 
-	r.Post("/api/shorten", handlePost(db))
-	r.Get("/{code}", handleGet(db))
+	r.Get("/", handleSearchMovie(apiKey))
 
 	return r
 }
 
-func handlePost(db map[string]string) http.HandlerFunc {
+func handleSearchMovie(apiKey string) http.HandlerFunc {
+
 	return func(w http.ResponseWriter, r *http.Request) {
-		var body PostBody
-		if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-			sendJSON(w, Response{Error: "Invalid request"}, http.StatusUnprocessableEntity)
+		search := r.URL.Query().Get("search")
+		if search == "" {
+			sendJSON(w, Response{Error: "Missing search parameter"}, http.StatusBadRequest)
 			return
 		}
-		_, err := url.Parse(body.URL)
+		resp, err := omdb.Search(apiKey, search)
 		if err != nil {
-			sendJSON(w, Response{Error: "Invalid URL"}, http.StatusBadRequest)
+			sendJSON(w, Response{Error: err.Error()}, http.StatusBadGateway)
 			return
 		}
-		code := generateCode(db)
-		db[code] = body.URL
-		sendJSON(w, Response{Data: code}, http.StatusCreated)
-	}
-}
-
-const characters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-
-func generateCode(db map[string]string) string {
-	const n = 8
-	for {
-		bytes := make([]byte, n)
-		for i := range n {
-			bytes[i] = characters[rand.IntN(len(characters))]
-		}
-		code := string(bytes)
-		if _, exists := db[code]; !exists {
-			return code
-		}
-	}
-}
-
-func handleGet(db map[string]string) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		code := chi.URLParam(r, "code")
-		url, ok := db[code]
-		if !ok {
-			sendJSON(w, Response{Error: "Not found"}, http.StatusNotFound)
+		if len(resp.Search) == 0 {
+			sendJSON(w, Response{Data: omdb.Result{
+				TotalResults: "0",
+				Response:     "true",
+			}}, http.StatusOK)
 			return
 		}
-		http.Redirect(w, r, url, http.StatusPermanentRedirect)
+
+		sendJSON(w, Response{Data: resp}, http.StatusOK)
 	}
 }
