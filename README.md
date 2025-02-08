@@ -1,82 +1,42 @@
-# 🔗 URL Shortener
+**go-second-big-project**
 
-A simple and fast URL shortening service built with Go.
+This is a simple movie search API built with Go and the OMDB API.
 
-## ✨ Features
+## Getting Started
 
-- **URL Shortening**: Convert long URLs into short, memorable codes
-- **Permanent Redirects**: Automatically redirect users to the original URL
-- **JSON API**: Simple REST API interface
-- **Input Validation**: Ensures valid URLs are provided
-- **Logging**: Structured JSON logging for better observability
+To get started, you'll need to have Go installed on your machine. You can download the latest version from the official Go website: <https://go.dev/dl/>.
 
-## 🚀 Getting Started
-
-### Prerequisites
-
-- Go 1.22 or higher
-
-### Running the Server
+Once you have Go installed, you can clone this repository and navigate to the project directory:
 
 ```bash
-go run main.go
+git clone https://github.com/your-username/go-second-big-project.git
+cd go-second-big-project
 ```
 
-The server will start on port 8080.
+Next, you can build the project by running the following command:
 
-## 📡 API Endpoints
-
-### Shorten a URL
-
-**POST** `/api/shorten`  
-**Content-Type:** `application/json`
-
-Request:
-
-```json
-{
-    "url": "https://your-long-url.com"
-}
+```bash
+go build
 ```
 
-Response:
+This will create an executable file named `go-second-big-project` in the current directory.
 
-```json
-{
-    "data": "Xa4bK9mN"
-}
+## Running the Project
+
+To run the project, you can use the following command:
+
+```bash
+./go-second-big-project
 ```
 
-### Access Shortened URL
+This will start the server and listen on port 8080.
 
-**GET** `/{code}`
+## Testing the API
 
-## ⚡ Technical Details
+You can test the API by making a GET request to the `/` endpoint with a `search` parameter:
 
-- Built with pure Go
-- Uses Chi router for HTTP handling
-- In-memory storage (map-based)
-- Generates 8-character random codes
-- Includes request logging and recovery middleware
-- 10-second timeout for read/write operations
+```bash
+curl http://localhost:8080/?search=the+matrix
+```
 
-## 🔒 Security Features
-
-- Request ID tracking
-- Panic recovery middleware
-- URL validation
-- Content-Type enforcement
-
-## 💻 Development
-
-This is a learning project demonstrating Go best practices including:
-
-- Clean code organization
-- Error handling
-- HTTP server configuration
-- Middleware usage
-- API design
-
----
-
-Built with ❤️ using Go
+This will return a JSON response with the search results.
